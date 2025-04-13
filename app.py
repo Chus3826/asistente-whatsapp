@@ -96,8 +96,7 @@ def whatsapp():
 
         if puntuales:
             for r in puntuales:
-                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}
-"
+                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}"
         else:
             respuesta += "Nada guardado."
     elif mensaje.startswith("eliminar "):
