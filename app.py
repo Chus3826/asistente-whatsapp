@@ -135,7 +135,17 @@ def whatsapp():
     r = MessagingResponse()
     r.message(respuesta)
     return Response(str(r), mimetype="application/xml")
-
 if __name__ == "__main__":
+    print("✅ Iniciando asistente Flask...")
+    
+    # Iniciar programador APScheduler
+    from apscheduler.schedulers.background import BackgroundScheduler
+    scheduler = BackgroundScheduler()
+    scheduler.add_job(revisar_recordatorios, "interval", minutes=1)
+    scheduler.start()
+    
+    print("✅ Programador de recordatorios iniciado.")
+    
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port)
+
