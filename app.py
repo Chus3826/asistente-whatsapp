@@ -122,7 +122,7 @@ def whatsapp():
                 respuesta = "❌ No se encontró esa cita."
         except:
             respuesta = "❌ Usa: eliminar_cita YYYY-MM-DD HH:MM"
-        else:
+    else:
         respuesta = (
             "🤖 Comandos disponibles:\n"
             "- medicacion HH:MM mensaje\n"
