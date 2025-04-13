@@ -48,26 +48,19 @@ def whatsapp():
     elif mensaje == "ver":
         diarios = data[numero]["diarios"]
         puntuales = data[numero]["puntuales"]
-        respuesta = "🧠 Tus recordatorios:"
-
-💊 Diarios:
-"
+        respuesta = "🧠 Tus recordatorios:\n\n💊 Diarios:\n"
         if diarios:
             for r in diarios:
-                respuesta += f"🕒 {r['hora']} - {r['mensaje']}
-"
+                respuesta += f"🕒 {r['hora']} - {r['mensaje']}\n"
         else:
-            respuesta += "Nada guardado.
-"
-        respuesta += "
-📅 Puntuales:
-"
+            respuesta += "Nada guardado.\n"
+        respuesta += "\n📅 Puntuales:\n"
         if puntuales:
             for r in puntuales:
-                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}
-"
+                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}\n"
         else:
             respuesta += "Nada guardado."
+
 
     elif mensaje.startswith("eliminar "):
         hora_borrar = mensaje.split(" ", 1)[1]
