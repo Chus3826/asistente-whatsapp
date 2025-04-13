@@ -92,7 +92,7 @@ def whatsapp():
                 respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}\\n"
         else:
             respuesta += "Nada guardado."
-
+"
         respuesta += "
 📅 Puntuales:
 "
@@ -125,20 +125,16 @@ def whatsapp():
                 respuesta = "❌ No se encontró esa cita."
         except:
             respuesta = "❌ Usa: eliminar_cita YYYY-MM-DD HH:MM"
-    else:
+        else:
         respuesta = (
-            "🤖 Comandos disponibles:
-"
-            "- medicacion HH:MM mensaje
-"
-            "- cita YYYY-MM-DD HH:MM mensaje
-"
-            "- ver
-"
-            "- eliminar HH:MM
-"
+            "🤖 Comandos disponibles:\n"
+            "- medicacion HH:MM mensaje\n"
+            "- cita YYYY-MM-DD HH:MM mensaje\n"
+            "- ver\n"
+            "- eliminar HH:MM\n"
             "- eliminar_cita YYYY-MM-DD HH:MM"
         )
+
     r = MessagingResponse()
     r.message(respuesta)
     return Response(str(r), mimetype="application/xml")
