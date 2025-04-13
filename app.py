@@ -48,7 +48,7 @@ def whatsapp():
     elif mensaje == "ver":
         diarios = data[numero]["diarios"]
         puntuales = data[numero]["puntuales"]
-        respuesta = "🧠 Tus recordatorios:
+        respuesta = "🧠 Tus recordatorios:"
 
 💊 Diarios:
 "
