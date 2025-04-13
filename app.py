@@ -37,16 +37,26 @@ def enviar_whatsapp(to, body):
         print("❌ Error al enviar:", e)
 
 def revisar_recordatorios():
+    print("⏰ Revisando recordatorios...")  # Log cada minuto
     data = cargar_datos()
     ahora = datetime.now().strftime("%H:%M")
     hoy = datetime.now().strftime("%Y-%m-%d")
+    print(f"📆 Fecha: {hoy} | 🕒 Hora actual: {ahora}")
+
     for numero, recordatorios in data.items():
+        print(f"📱 Número: {numero}")
         for r in recordatorios.get("diarios", []):
+            print(f"   💊 Diario: {r}")
             if r["hora"] == ahora:
+                print(f"✅ Enviando recordatorio diario: {r['mensaje']}")
                 enviar_whatsapp(numero, f"⏰ Recordatorio diario: {r['mensaje']}")
+
         for r in recordatorios.get("puntuales", []):
+            print(f"   📅 Puntual: {r}")
             if r["fecha"] == hoy and r["hora"] == ahora:
+                print(f"✅ Enviando cita puntual: {r['mensaje']}")
                 enviar_whatsapp(numero, f"📅 Recordatorio de cita: {r['mensaje']}")
+
 
 scheduler = BackgroundScheduler()
 scheduler.add_job(revisar_recordatorios, "interval", minutes=1)
