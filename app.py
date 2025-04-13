@@ -93,7 +93,6 @@ def whatsapp():
         else:
             respuesta += "Nada guardado."
 
-"
         respuesta += "
 📅 Puntuales:
 "
