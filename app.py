@@ -77,7 +77,7 @@ def whatsapp():
             respuesta = f"📅 Cita guardada para el {fecha} a las {hora}: {texto}"
         except:
             respuesta = "❌ Usa: cita YYYY-MM-DD HH:MM tu mensaje"
-       elif mensaje == "ver":
+    elif mensaje == "ver":
         diarios = data[numero]["diarios"]
         puntuales = data[numero]["puntuales"]
         respuesta = "🧠 Tus recordatorios:\n\n💊 Diarios:\n"
