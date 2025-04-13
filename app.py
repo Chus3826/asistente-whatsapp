@@ -92,9 +92,8 @@ def whatsapp():
                 respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}\\n"
         else:
             respuesta += "Nada guardado."
-        respuesta += "
-📅 Puntuales:
-"
+       respuesta += "\\n📅 Puntuales:\\n"
+
         if puntuales:
             for r in puntuales:
                 respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}
