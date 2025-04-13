@@ -77,22 +77,22 @@ def whatsapp():
             respuesta = f"📅 Cita guardada para el {fecha} a las {hora}: {texto}"
         except:
             respuesta = "❌ Usa: cita YYYY-MM-DD HH:MM tu mensaje"
-    elif mensaje == "ver":
+       elif mensaje == "ver":
         diarios = data[numero]["diarios"]
         puntuales = data[numero]["puntuales"]
-        respuesta = "🧠 Tus recordatorios:\\n\\n💊 Diarios:\\n"
+        respuesta = "🧠 Tus recordatorios:\n\n💊 Diarios:\n"
         if diarios:
             for r in diarios:
-                respuesta += f"🕒 {r['hora']} - {r['mensaje']}\\n"
+                respuesta += f"🕒 {r['hora']} - {r['mensaje']}\n"
         else:
-            respuesta += "Nada guardado.\\n"
-        respuesta += "\\n📅 Puntuales:\\n"
+            respuesta += "Nada guardado.\n"
+        respuesta += "\n📅 Puntuales:\n"
         if puntuales:
             for r in puntuales:
-                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}\\n"
+                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}\n"
         else:
             respuesta += "Nada guardado."
-       respuesta += "\\n📅 Puntuales:\\n"
+
 
         if puntuales:
             for r in puntuales:
