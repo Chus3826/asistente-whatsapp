@@ -89,18 +89,14 @@ def whatsapp():
 
     else:
         respuesta = (
-            "🤖 Comandos disponibles:
-"
-            "- medicacion HH:MM mensaje
-"
-            "- cita YYYY-MM-DD HH:MM mensaje
-"
-            "- ver
-"
-            "- eliminar HH:MM
-"
+            "🤖 Comandos disponibles:\n"
+            "- medicacion HH:MM mensaje\n"
+            "- cita YYYY-MM-DD HH:MM mensaje\n"
+            "- ver\n"
+            "- eliminar HH:MM\n"
             "- eliminar_cita YYYY-MM-DD HH:MM"
         )
+
 
     r = MessagingResponse()
     r.message(respuesta)
