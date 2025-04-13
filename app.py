@@ -31,22 +31,26 @@ def enviar_whatsapp(to, body):
         print(f"❌ Error al enviar a {to}: {e}")
 
 def revisar_recordatorios():
-    print("⏰ Revisando recordatorios...")
+    print("⏰ [Scheduler activo] Revisando recordatorios...")
     data = cargar_datos()
     ahora = datetime.now().strftime("%H:%M")
     hoy = datetime.now().strftime("%Y-%m-%d")
-    print(f"📆 Fecha: {hoy} | 🕒 Hora: {ahora}")
+    print(f"🕒 Hora actual: {ahora} | 📅 Fecha: {hoy}")
 
     for numero, recordatorios in data.items():
-        print(f"🔍 Número: {numero}")
+        print(f"👤 Usuario: {numero}")
         for r in recordatorios.get("diarios", []):
-            print(f"  💊 Diario: {r}")
+            print(f"   💊 {r}")
             if r["hora"] == ahora:
+                print(f"✅ Enviando diario a {numero}")
                 enviar_whatsapp(numero, f"⏰ Recordatorio diario: {r['mensaje']}")
+
         for r in recordatorios.get("puntuales", []):
-            print(f"  📅 Puntual: {r}")
+            print(f"   📅 {r}")
             if r["fecha"] == hoy and r["hora"] == ahora:
+                print(f"✅ Enviando cita puntual a {numero}")
                 enviar_whatsapp(numero, f"📅 Recordatorio de cita: {r['mensaje']}")
+
 
 @app.route("/whatsapp", methods=["POST"])
 def whatsapp():
