@@ -56,7 +56,7 @@ def whatsapp():
         data[numero] = {"diarios": [], "puntuales": []}
     respuesta = ""
 
-    intenciones = ["recordame", "recordar", "tomar", "pastilla", "medicina", "me toca", "tengo que", "a las"]
+        intenciones = ["recordame", "recordar", "tomar", "pastilla", "medicina", "me toca", "tengo que", "a las"]
 
     if any(palabra in mensaje for palabra in intenciones):
         try:
@@ -91,15 +91,8 @@ def whatsapp():
         else:
             respuesta += "Nada guardado."
 
-        respuesta += "📅 Puntuales:"
-        if puntuales:
-            for r in puntuales:
-                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}"
-        else:
-            respuesta += "Nada guardado."
-
-        else:
-            respuesta = (
+    else:
+        respuesta = (
             "🤖 Comandos disponibles:\n"
             "- Frases como: tomar pastilla a las 10, recordame que...\n"
             "- ver"
