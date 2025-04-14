@@ -58,21 +58,20 @@ def whatsapp():
         data[numero] = {"diarios": [], "puntuales": []}
     respuesta = ""
 
-if "medicacion" in mensaje or "tomar" in mensaje or "pastilla" in mensaje:
-    try:
-        fechas = search_dates(mensaje, languages=['es'])
-        if fechas:
-            _, fecha_hora = fechas[0]
-            hora = fecha_hora.strftime("%H:%M")
-            texto = mensaje.replace(hora, "").strip()
-            data[numero]["diarios"].append({"hora": hora, "mensaje": texto})
-            guardar_datos(data)
-            respuesta = f"💊 Recordatorio diario guardado para las {hora}: {texto}"
-        else:
-            respuesta = "❌ No entendí la hora. Escribilo así: tomar pastilla a las 9"
-    except:
-        respuesta = "❌ No pude procesar eso. Probá con una frase sencilla."
-
+    if "medicacion" in mensaje or "tomar" in mensaje or "pastilla" in mensaje:
+        try:
+            fechas = search_dates(mensaje, languages=['es'])
+            if fechas:
+                _, fecha_hora = fechas[0]
+                hora = fecha_hora.strftime("%H:%M")
+                texto = mensaje.replace(fechas[0][0], "").strip()
+                data[numero]["diarios"].append({"hora": hora, "mensaje": texto})
+                guardar_datos(data)
+                respuesta = f"💊 Recordatorio diario guardado para las {hora}: {texto}"
+            else:
+                respuesta = "❌ No entendí la hora. Probá con: tomar pastilla a las 9"
+        except Exception as e:
+            respuesta = f"❌ Hubo un problema procesando el mensaje: {e}"
 
     elif mensaje == "ver":
         diarios = data[numero]["diarios"]
@@ -93,10 +92,11 @@ if "medicacion" in mensaje or "tomar" in mensaje or "pastilla" in mensaje:
     else:
         respuesta = (
             "🤖 Comandos disponibles:\n"
-            "- escribir: tengo que tomar algo a las 10\n"
+            "- escribir: tomar pastilla a las 10\n"
             "- escribir: ver\n"
             "(no necesitás seguir un formato exacto)"
         )
+
 
 
     r = MessagingResponse()
