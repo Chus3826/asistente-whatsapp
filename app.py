@@ -124,10 +124,8 @@ def whatsapp():
             respuesta += "Nada guardado."
     else:
         respuesta = (
-            "🤖 Comandos:
-"
-            "- Escribí: tomar pastilla a las 10, o algo parecido
-"
+            "🤖 Comandos:"
+            "- Escribí: tomar pastilla a las 10, o algo parecido"
             "- ver"
         )
 
