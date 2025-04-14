@@ -57,19 +57,20 @@ def whatsapp():
         data[numero] = {"diarios": [], "puntuales": []}
     respuesta = ""
 
-if "medicacion" in mensaje or "tomar" in mensaje or "pastilla" in mensaje:
+    if "medicacion" in mensaje or "tomar" in mensaje or "pastilla" in mensaje:
         try:
             parsed = dateparser.parse(mensaje, languages=['es'])
             if parsed:
                 hora = parsed.strftime("%H:%M")
-                texto = mensaje.replace("medicacion", "").replace(hora, "").strip()
+                texto = mensaje.replace(hora, "").strip()
                 data[numero]["diarios"].append({"hora": hora, "mensaje": texto})
                 guardar_datos(data)
                 respuesta = f"💊 Recordatorio diario guardado para las {hora}: {texto}"
             else:
-                respuesta = "❌ No entendí la hora. Escribilo de nuevo, por ejemplo: medicacion a las 8 tomar pastilla"
+                respuesta = "❌ No entendí la hora. Escribilo así: tomar pastilla a las 9"
         except:
-            respuesta = "❌ No pude procesar eso. Probá de nuevo con una frase sencilla."
+            respuesta = "❌ No pude procesar eso. Probá con una frase sencilla."
+
     elif mensaje == "ver":
         diarios = data[numero]["diarios"]
         puntuales = data[numero]["puntuales"]
@@ -86,15 +87,14 @@ if "medicacion" in mensaje or "tomar" in mensaje or "pastilla" in mensaje:
         else:
             respuesta += "Nada guardado."
 
-
-
     else:
         respuesta = (
-            "🤖 Comandos disponibles:"
-            "- medicacion a las 9:00 tomar algo"
-            "- ver"
+            "🤖 Comandos disponibles:\n"
+            "- escribir: tengo que tomar algo a las 10\n"
+            "- escribir: ver\n"
             "(no necesitás seguir un formato exacto)"
         )
+
 
     r = MessagingResponse()
     r.message(respuesta)
