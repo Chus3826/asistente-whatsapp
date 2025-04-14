@@ -70,7 +70,6 @@ if "medicacion" in mensaje or "tomar" in mensaje or "pastilla" in mensaje:
                 respuesta = "❌ No entendí la hora. Escribilo de nuevo, por ejemplo: medicacion a las 8 tomar pastilla"
         except:
             respuesta = "❌ No pude procesar eso. Probá de nuevo con una frase sencilla."
-
     elif mensaje == "ver":
         diarios = data[numero]["diarios"]
         puntuales = data[numero]["puntuales"]
@@ -86,6 +85,7 @@ if "medicacion" in mensaje or "tomar" in mensaje or "pastilla" in mensaje:
                 respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}\n"
         else:
             respuesta += "Nada guardado."
+
 
 
     else:
