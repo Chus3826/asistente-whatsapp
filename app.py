@@ -7,6 +7,7 @@ from datetime import datetime
 from twilio.rest import Client
 from apscheduler.schedulers.background import BackgroundScheduler
 from pytz import timezone
+from dateparser.search import search_dates
 import dateparser
 
 app = Flask(__name__)
@@ -57,19 +58,21 @@ def whatsapp():
         data[numero] = {"diarios": [], "puntuales": []}
     respuesta = ""
 
-    if "medicacion" in mensaje or "tomar" in mensaje or "pastilla" in mensaje:
-        try:
-            parsed = dateparser.parse(mensaje, languages=['es'])
-            if parsed:
-                hora = parsed.strftime("%H:%M")
-                texto = mensaje.replace(hora, "").strip()
-                data[numero]["diarios"].append({"hora": hora, "mensaje": texto})
-                guardar_datos(data)
-                respuesta = f"💊 Recordatorio diario guardado para las {hora}: {texto}"
-            else:
-                respuesta = "❌ No entendí la hora. Escribilo así: tomar pastilla a las 9"
-        except:
-            respuesta = "❌ No pude procesar eso. Probá con una frase sencilla."
+if "medicacion" in mensaje or "tomar" in mensaje or "pastilla" in mensaje:
+    try:
+        fechas = search_dates(mensaje, languages=['es'])
+        if fechas:
+            _, fecha_hora = fechas[0]
+            hora = fecha_hora.strftime("%H:%M")
+            texto = mensaje.replace(hora, "").strip()
+            data[numero]["diarios"].append({"hora": hora, "mensaje": texto})
+            guardar_datos(data)
+            respuesta = f"💊 Recordatorio diario guardado para las {hora}: {texto}"
+        else:
+            respuesta = "❌ No entendí la hora. Escribilo así: tomar pastilla a las 9"
+    except:
+        respuesta = "❌ No pude procesar eso. Probá con una frase sencilla."
+
 
     elif mensaje == "ver":
         diarios = data[numero]["diarios"]
