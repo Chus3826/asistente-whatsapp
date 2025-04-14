@@ -77,36 +77,29 @@ def whatsapp():
         except Exception as e:
             respuesta = f"❌ Hubo un problema procesando el mensaje: {e}"
 
-    elif mensaje == "ver":
+      elif mensaje == "ver":
         diarios = data[numero]["diarios"]
         puntuales = data[numero]["puntuales"]
-        respuesta = "🧠 Tus recordatorios:
-
-💊 Diarios:
-"
+        respuesta = (
+            "🧠 Tus recordatorios:\n\n💊 Diarios:\n"
+        )
         if diarios:
             for r in diarios:
-                respuesta += f"🕒 {r['hora']} - {r['mensaje']}
-"
+                respuesta += f"🕒 {r['hora']} - {r['mensaje']}\n"
         else:
-            respuesta += "Nada guardado.
-"
-        respuesta += "
-📅 Puntuales:
-"
+            respuesta += "Nada guardado.\n"
+        respuesta += "\n📅 Puntuales:\n"
         if puntuales:
             for r in puntuales:
-                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}
-"
+                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}\n"
         else:
             respuesta += "Nada guardado."
 
+
     else:
         respuesta = (
-            "🤖 Comandos disponibles:
-"
-            "- Frases como: tomar pastilla a las 10, recordame que...
-"
+            "🤖 Comandos disponibles:"
+            "- Frases como: tomar pastilla a las 10, recordame que..."
             "- ver"
         )
 
