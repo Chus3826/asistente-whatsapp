@@ -60,7 +60,11 @@ def whatsapp():
 
     if any(palabra in mensaje for palabra in intenciones):
         try:
-            fechas = search_dates(mensaje, languages=['es'])
+            fechas = search_dates(
+                mensaje,
+                languages=['es'],
+                settings={"PREFER_DATES_FROM": "future", "RETURN_AS_TIMEZONE_AWARE": False}
+            )
             if fechas:
                 _, fecha_hora = fechas[0]
                 hora = fecha_hora.strftime("%H:%M")
@@ -72,36 +76,46 @@ def whatsapp():
                 respuesta = "❌ No entendí la hora. Intentá algo como: tomar pastilla a las 9"
         except Exception as e:
             respuesta = f"❌ Hubo un problema procesando el mensaje: {e}"
+
     elif mensaje == "ver":
         diarios = data[numero]["diarios"]
         puntuales = data[numero]["puntuales"]
-        respuesta = (
-            "🧠 Tus recordatorios:\n\n💊 Diarios:\n"
-        )
+        respuesta = "🧠 Tus recordatorios:
+
+💊 Diarios:
+"
         if diarios:
             for r in diarios:
-                respuesta += f"🕒 {r['hora']} - {r['mensaje']}\n"
+                respuesta += f"🕒 {r['hora']} - {r['mensaje']}
+"
         else:
-            respuesta += "Nada guardado.\n"
-        respuesta += "\n📅 Puntuales:\n"
+            respuesta += "Nada guardado.
+"
+        respuesta += "
+📅 Puntuales:
+"
         if puntuales:
             for r in puntuales:
-                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}\n"
+                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}
+"
         else:
             respuesta += "Nada guardado."
 
     else:
         respuesta = (
-            "🤖 Comandos disponibles:\n"
-            "- Frases como: tomar pastilla a las 10, recordame que...\n"
+            "🤖 Comandos disponibles:
+"
+            "- Frases como: tomar pastilla a las 10, recordame que...
+"
             "- ver"
         )
 
     r = MessagingResponse()
     r.message(respuesta)
     return Response(str(r), mimetype="application/xml")
+
 if __name__ == "__main__":
-    print("✅ Iniciando asistente Flask (modo inteligente)...")
+    print("✅ Iniciando asistente Flask (mejorado)...")
     scheduler = BackgroundScheduler()
     scheduler.add_job(revisar_recordatorios, "interval", minutes=1)
     scheduler.start()
