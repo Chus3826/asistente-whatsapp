@@ -55,7 +55,6 @@ def whatsapp():
     if numero not in data:
         data[numero] = {"diarios": [], "puntuales": []}
     respuesta = ""
-
     intenciones = ["recordame", "recordar", "tomar", "pastilla", "medicina", "me toca", "tengo que", "a las"]
 
     if any(palabra in mensaje for palabra in intenciones):
@@ -76,11 +75,12 @@ def whatsapp():
                 respuesta = "❌ No entendí la hora. Intentá algo como: tomar pastilla a las 9"
         except Exception as e:
             respuesta = f"❌ Hubo un problema procesando el mensaje: {e}"
-        elif mensaje == "ver":
-            diarios = data[numero]["diarios"]
-            puntuales = data[numero]["puntuales"]
-            respuesta = (
-                "🧠 Tus recordatorios:\n\n💊 Diarios:\n"
+
+    elif mensaje == "ver":
+        diarios = data[numero]["diarios"]
+        puntuales = data[numero]["puntuales"]
+        respuesta = (
+            "🧠 Tus recordatorios:\n\n💊 Diarios:\n"
         )
         if diarios:
             for r in diarios:
@@ -94,20 +94,13 @@ def whatsapp():
         else:
             respuesta += "Nada guardado."
 
-    respuesta += "\n📅 Puntuales:\n"
-    if puntuales:
-        for r in puntuales:
-            respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}\n"
-    else:
-        respuesta += "Nada guardado."
-
-
     else:
         respuesta = (
-            "🤖 Comandos disponibles:"
-            "- Frases como: tomar pastilla a las 10, recordame que..."
+            "🤖 Comandos disponibles:\n"
+            "- Frases como: tomar pastilla a las 10, recordame que...\n"
             "- ver"
         )
+
 
     r = MessagingResponse()
     r.message(respuesta)
