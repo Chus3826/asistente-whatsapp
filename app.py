@@ -76,8 +76,7 @@ def whatsapp():
                 respuesta = "❌ No entendí la hora. Intentá algo como: tomar pastilla a las 9"
         except Exception as e:
             respuesta = f"❌ Hubo un problema procesando el mensaje: {e}"
-
-elif mensaje == "ver":
+    elif mensaje == "ver":
     diarios = data[numero]["diarios"]
     puntuales = data[numero]["puntuales"]
     respuesta = (
@@ -94,7 +93,6 @@ elif mensaje == "ver":
             respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}\n"
     else:
         respuesta += "Nada guardado."
-
 
 
     else:
