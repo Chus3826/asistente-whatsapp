@@ -133,7 +133,7 @@ def whatsapp():
     r.message(respuesta)
     return Response(str(r), mimetype="application/xml")
 
-if __name__ == "__main__":
+
     print("✅ Asistente híbrido iniciado.")
     scheduler = BackgroundScheduler()
     scheduler.add_job(revisar_recordatorios, "interval", minutes=1)
