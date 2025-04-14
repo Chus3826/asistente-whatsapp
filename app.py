@@ -4,9 +4,10 @@ from twilio.twiml.messaging_response import MessagingResponse
 import json
 import os
 from datetime import datetime
-from pytz import timezone
 from twilio.rest import Client
 from apscheduler.schedulers.background import BackgroundScheduler
+from pytz import timezone
+import dateparser
 
 app = Flask(__name__)
 DB_FILE = "recordatorios.json"
@@ -40,19 +41,12 @@ def revisar_recordatorios():
     print(f"🕒 Hora actual: {ahora} | 📅 Fecha: {hoy}")
 
     for numero, recordatorios in data.items():
-        print(f"👤 Usuario: {numero}")
         for r in recordatorios.get("diarios", []):
-            print(f"   💊 {r}")
             if r["hora"] == ahora:
-                print(f"✅ Enviando diario a {numero}")
                 enviar_whatsapp(numero, f"⏰ Recordatorio diario: {r['mensaje']}")
-
         for r in recordatorios.get("puntuales", []):
-            print(f"   📅 {r}")
             if r["fecha"] == hoy and r["hora"] == ahora:
-                print(f"✅ Enviando cita puntual a {numero}")
                 enviar_whatsapp(numero, f"📅 Recordatorio de cita: {r['mensaje']}")
-
 
 @app.route("/whatsapp", methods=["POST"])
 def whatsapp():
@@ -65,81 +59,59 @@ def whatsapp():
 
     if mensaje.startswith("medicacion"):
         try:
-            _, hora, texto = mensaje.split(" ", 2)
-            data[numero]["diarios"].append({"hora": hora, "mensaje": texto})
-            guardar_datos(data)
-            respuesta = f"💊 Recordatorio diario guardado para las {hora}: {texto}"
+            parsed = dateparser.parse(mensaje, languages=['es'])
+            if parsed:
+                hora = parsed.strftime("%H:%M")
+                texto = mensaje.replace("medicacion", "").replace(hora, "").strip()
+                data[numero]["diarios"].append({"hora": hora, "mensaje": texto})
+                guardar_datos(data)
+                respuesta = f"💊 Recordatorio diario guardado para las {hora}: {texto}"
+            else:
+                respuesta = "❌ No entendí la hora. Escribilo de nuevo, por ejemplo: medicacion a las 8 tomar pastilla"
         except:
-            respuesta = "❌ Usa: medicacion HH:MM tu mensaje"
-
-    elif mensaje.startswith("cita"):
-        try:
-            _, fecha, hora, texto = mensaje.split(" ", 3)
-            data[numero]["puntuales"].append({"fecha": fecha, "hora": hora, "mensaje": texto})
-            guardar_datos(data)
-            respuesta = f"📅 Cita guardada para el {fecha} a las {hora}: {texto}"
-        except:
-            respuesta = "❌ Usa: cita YYYY-MM-DD HH:MM tu mensaje"
+            respuesta = "❌ No pude procesar eso. Probá de nuevo con una frase sencilla."
 
     elif mensaje == "ver":
         diarios = data[numero]["diarios"]
         puntuales = data[numero]["puntuales"]
-        respuesta = "🧠 Tus recordatorios:\n\n💊 Diarios:\n"
+        respuesta = "🧠 Tus recordatorios:
+
+💊 Diarios:
+"
         if diarios:
             for r in diarios:
-                respuesta += f"🕒 {r['hora']} - {r['mensaje']}\n"
+                respuesta += f"🕒 {r['hora']} - {r['mensaje']}
+"
         else:
-            respuesta += "Nada guardado.\n"
-        respuesta += "\n📅 Puntuales:\n"
+            respuesta += "Nada guardado.
+"
+        respuesta += "
+📅 Puntuales:
+"
         if puntuales:
             for r in puntuales:
-                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}\n"
+                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}
+"
         else:
             respuesta += "Nada guardado."
 
-
-    elif mensaje.startswith("eliminar "):
-        hora_borrar = mensaje.split(" ", 1)[1]
-        originales = len(data[numero]["diarios"])
-        data[numero]["diarios"] = [r for r in data[numero]["diarios"] if r["hora"] != hora_borrar]
-        if len(data[numero]["diarios"]) < originales:
-            guardar_datos(data)
-            respuesta = f"🗑️ Eliminado recordatorio diario a las {hora_borrar}."
-        else:
-            respuesta = "❌ No se encontró ese recordatorio diario."
-
-    elif mensaje.startswith("eliminar_cita "):
-        try:
-            _, fecha, hora = mensaje.split(" ")
-            originales = len(data[numero]["puntuales"])
-            data[numero]["puntuales"] = [
-                r for r in data[numero]["puntuales"] if not (r["fecha"] == fecha and r["hora"] == hora)
-            ]
-            if len(data[numero]["puntuales"]) < originales:
-                guardar_datos(data)
-                respuesta = f"🗑️ Cita eliminada para {fecha} a las {hora}."
-            else:
-                respuesta = "❌ No se encontró esa cita."
-        except:
-            respuesta = "❌ Usa: eliminar_cita YYYY-MM-DD HH:MM"
-
     else:
         respuesta = (
-            "🤖 Comandos disponibles:\n"
-            "- medicacion HH:MM mensaje\n"
-            "- cita YYYY-MM-DD HH:MM mensaje\n"
-            "- ver\n"
-            "- eliminar HH:MM\n"
-            "- eliminar_cita YYYY-MM-DD HH:MM"
+            "🤖 Comandos disponibles:
+"
+            "- medicacion a las 9:00 tomar algo
+"
+            "- ver
+"
+            "(no necesitás seguir un formato exacto)"
         )
-
 
     r = MessagingResponse()
     r.message(respuesta)
     return Response(str(r), mimetype="application/xml")
 
 if __name__ == "__main__":
-    print("✅ Iniciando asistente Flask...")
+    print("✅ Iniciando asistente Flask (versión NLP)...")
     scheduler = BackgroundScheduler()
     scheduler.add_job(revisar_recordatorios, "interval", minutes=1)
     scheduler.start()
