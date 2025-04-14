@@ -57,7 +57,7 @@ def whatsapp():
         data[numero] = {"diarios": [], "puntuales": []}
     respuesta = ""
 
-    if mensaje.startswith("medicacion"):
+if "medicacion" in mensaje or "tomar" in mensaje or "pastilla" in mensaje:
         try:
             parsed = dateparser.parse(mensaje, languages=['es'])
             if parsed:
