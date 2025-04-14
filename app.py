@@ -55,9 +55,7 @@ def interpretar_con_gpt(mensaje):
     try:
         respuesta = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
-            messages=[
-                {"role": "user", "content": prompt}
-            ],
+            messages=[{"role": "user", "content": prompt}],
             max_tokens=60,
             temperature=0.3
         )
@@ -81,11 +79,7 @@ def whatsapp():
 
     if any(p in mensaje.lower() for p in intenciones):
         try:
-            fechas = search_dates(
-                mensaje,
-                languages=["es"],
-                settings={"PREFER_DATES_FROM": "future", "RETURN_AS_TIMEZONE_AWARE": False}
-            )
+            fechas = search_dates(mensaje, languages=["es"], settings={"PREFER_DATES_FROM": "future"})
             if fechas:
                 _, fecha_hora = fechas[0]
                 hora = fecha_hora.strftime("%H:%M")
@@ -101,12 +95,11 @@ def whatsapp():
                         "mensaje": parsed["mensaje"]
                     })
                     guardar_datos(data)
-                    respuesta = f"💊 Guardado (vía GPT) para las {parsed['hora']}: {parsed['mensaje']}"
+                    respuesta = f"💊 Guardado (GPT) {parsed['hora']}: {parsed['mensaje']}"
                 else:
                     respuesta = "❌ No pude entender el mensaje ni con ayuda. Probá de otra forma."
         except Exception as e:
             respuesta = f"❌ Error al procesar: {e}"
-
     elif mensaje.lower() == "ver":
         diarios = data[numero]["diarios"]
         puntuales = data[numero]["puntuales"]
@@ -124,8 +117,10 @@ def whatsapp():
             respuesta += "Nada guardado."
     else:
         respuesta = (
-            "🤖 Comandos:"
-            "- Escribí: tomar pastilla a las 10, o algo parecido"
+            "🤖 Comandos:
+"
+            "- tomar pastilla a las 10
+"
             "- ver"
         )
 
@@ -133,10 +128,11 @@ def whatsapp():
     r.message(respuesta)
     return Response(str(r), mimetype="application/xml")
 
+# Scheduler y servidor Flask
+print("✅ Asistente híbrido iniciado.")
+scheduler = BackgroundScheduler()
+scheduler.add_job(revisar_recordatorios, "interval", minutes=1)
+scheduler.start()
 
-    print("✅ Asistente híbrido iniciado.")
-    scheduler = BackgroundScheduler()
-    scheduler.add_job(revisar_recordatorios, "interval", minutes=1)
-    scheduler.start()
-    port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port)
+port = int(os.environ.get("PORT", 5000))
+app.run(host="0.0.0.0", port=port)
