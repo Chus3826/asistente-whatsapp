@@ -4,6 +4,7 @@ from twilio.twiml.messaging_response import MessagingResponse
 import json
 import os
 from datetime import datetime
+from pytz import timezone
 from twilio.rest import Client
 from apscheduler.schedulers.background import BackgroundScheduler
 
@@ -33,8 +34,9 @@ def enviar_whatsapp(to, body):
 def revisar_recordatorios():
     print("⏰ [Scheduler activo] Revisando recordatorios...")
     data = cargar_datos()
-    ahora = datetime.now().strftime("%H:%M")
-    hoy = datetime.now().strftime("%Y-%m-%d")
+    zona_local = timezone("Europe/Madrid")
+    ahora = datetime.now(zona_local).strftime("%H:%M")
+    hoy = datetime.now(zona_local).strftime("%Y-%m-%d")
     print(f"🕒 Hora actual: {ahora} | 📅 Fecha: {hoy}")
 
     for numero, recordatorios in data.items():
