@@ -56,7 +56,7 @@ def whatsapp():
         data[numero] = {"diarios": [], "puntuales": []}
     respuesta = ""
 
-        intenciones = ["recordame", "recordar", "tomar", "pastilla", "medicina", "me toca", "tengo que", "a las"]
+    intenciones = ["recordame", "recordar", "tomar", "pastilla", "medicina", "me toca", "tengo que", "a las"]
 
     if any(palabra in mensaje for palabra in intenciones):
         try:
@@ -72,7 +72,6 @@ def whatsapp():
                 respuesta = "❌ No entendí la hora. Intentá algo como: tomar pastilla a las 9"
         except Exception as e:
             respuesta = f"❌ Hubo un problema procesando el mensaje: {e}"
-
     elif mensaje == "ver":
         diarios = data[numero]["diarios"]
         puntuales = data[numero]["puntuales"]
@@ -98,11 +97,9 @@ def whatsapp():
             "- ver"
         )
 
-
     r = MessagingResponse()
     r.message(respuesta)
     return Response(str(r), mimetype="application/xml")
-
 if __name__ == "__main__":
     print("✅ Iniciando asistente Flask (modo inteligente)...")
     scheduler = BackgroundScheduler()
