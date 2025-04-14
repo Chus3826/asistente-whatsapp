@@ -9,6 +9,7 @@ from apscheduler.schedulers.background import BackgroundScheduler
 from pytz import timezone
 from dateparser.search import search_dates
 import openai
+import re
 
 app = Flask(__name__)
 DB_FILE = "recordatorios.json"
@@ -51,16 +52,21 @@ def revisar_recordatorios():
                 enviar_whatsapp(numero, f"📅 Recordatorio de cita: {r['mensaje']}")
 
 def interpretar_con_gpt(mensaje):
-    prompt = f"Extraé la hora y el mensaje de este texto para un recordatorio diario. Respondé solo en JSON:\nTexto: {mensaje}"
+    prompt = f"Extraé la hora y el mensaje de este texto para un recordatorio diario. Respondé solo en JSON (ejemplo: {{'hora': '09:00', 'mensaje': 'tomar pastilla'}}). Texto: {mensaje}"
     try:
         respuesta = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=60,
+            max_tokens=80,
             temperature=0.3
         )
         contenido = respuesta.choices[0].message.content.strip()
         print("🧠 GPT respondió:", contenido)
+
+        # Limpieza básica si viene mal formado
+        contenido = re.sub(r"^[^\{]*", "", contenido)  # eliminar antes del primer {
+        contenido = re.sub(r"[^\}]*$", "", contenido)  # eliminar después del último }
+
         return json.loads(contenido)
     except Exception as e:
         print("❌ Error usando OpenAI:", e)
@@ -117,8 +123,10 @@ def whatsapp():
             respuesta += "Nada guardado."
     else:
         respuesta = (
-            "🤖 Comandos:"
-            "- tomar pastilla a las 10"
+            "🤖 Comandos:
+"
+            "- tomar pastilla a las 10
+"
             "- ver"
         )
 
@@ -126,7 +134,6 @@ def whatsapp():
     r.message(respuesta)
     return Response(str(r), mimetype="application/xml")
 
-# Scheduler y servidor Flask
 print("✅ Asistente híbrido iniciado.")
 scheduler = BackgroundScheduler()
 scheduler.add_job(revisar_recordatorios, "interval", minutes=1)
