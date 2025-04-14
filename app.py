@@ -8,7 +8,6 @@ from twilio.rest import Client
 from apscheduler.schedulers.background import BackgroundScheduler
 from pytz import timezone
 from dateparser.search import search_dates
-import dateparser
 
 app = Flask(__name__)
 DB_FILE = "recordatorios.json"
@@ -39,7 +38,6 @@ def revisar_recordatorios():
     zona_local = timezone("Europe/Madrid")
     ahora = datetime.now(zona_local).strftime("%H:%M")
     hoy = datetime.now(zona_local).strftime("%Y-%m-%d")
-    print(f"🕒 Hora actual: {ahora} | 📅 Fecha: {hoy}")
 
     for numero, recordatorios in data.items():
         for r in recordatorios.get("diarios", []):
@@ -58,7 +56,9 @@ def whatsapp():
         data[numero] = {"diarios": [], "puntuales": []}
     respuesta = ""
 
-    if "medicacion" in mensaje or "tomar" in mensaje or "pastilla" in mensaje:
+    intenciones = ["recordame", "recordar", "tomar", "pastilla", "medicina", "me toca", "tengo que", "a las"]
+
+    if any(palabra in mensaje for palabra in intenciones):
         try:
             fechas = search_dates(mensaje, languages=['es'])
             if fechas:
@@ -67,44 +67,51 @@ def whatsapp():
                 texto = mensaje.replace(fechas[0][0], "").strip()
                 data[numero]["diarios"].append({"hora": hora, "mensaje": texto})
                 guardar_datos(data)
-                respuesta = f"💊 Recordatorio diario guardado para las {hora}: {texto}"
+                respuesta = f"💊 Recordatorio guardado para las {hora}: {texto}"
             else:
-                respuesta = "❌ No entendí la hora. Probá con: tomar pastilla a las 9"
+                respuesta = "❌ No entendí la hora. Intentá algo como: tomar pastilla a las 9"
         except Exception as e:
             respuesta = f"❌ Hubo un problema procesando el mensaje: {e}"
 
     elif mensaje == "ver":
         diarios = data[numero]["diarios"]
         puntuales = data[numero]["puntuales"]
-        respuesta = "🧠 Tus recordatorios:\n\n💊 Diarios:\n"
+        respuesta = "🧠 Tus recordatorios:
+
+💊 Diarios:
+"
         if diarios:
             for r in diarios:
-                respuesta += f"🕒 {r['hora']} - {r['mensaje']}\n"
+                respuesta += f"🕒 {r['hora']} - {r['mensaje']}
+"
         else:
-            respuesta += "Nada guardado.\n"
-        respuesta += "\n📅 Puntuales:\n"
+            respuesta += "Nada guardado.
+"
+        respuesta += "
+📅 Puntuales:
+"
         if puntuales:
             for r in puntuales:
-                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}\n"
+                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}
+"
         else:
             respuesta += "Nada guardado."
 
     else:
         respuesta = (
-            "🤖 Comandos disponibles:\n"
-            "- escribir: tomar pastilla a las 10\n"
-            "- escribir: ver\n"
-            "(no necesitás seguir un formato exacto)"
+            "🤖 Comandos disponibles:
+"
+            "- Frases como: tomar pastilla a las 10, recordame que...
+"
+            "- ver"
         )
-
-
 
     r = MessagingResponse()
     r.message(respuesta)
     return Response(str(r), mimetype="application/xml")
 
 if __name__ == "__main__":
-    print("✅ Iniciando asistente Flask (versión NLP)...")
+    print("✅ Iniciando asistente Flask (modo inteligente)...")
     scheduler = BackgroundScheduler()
     scheduler.add_job(revisar_recordatorios, "interval", minutes=1)
     scheduler.start()
