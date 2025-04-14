@@ -99,11 +99,12 @@ def whatsapp():
             respuesta += "Nada guardado."
 
         else:
-        respuesta = (
-            "🤖 Comandos disponibles:"
-            "- Frases como: tomar pastilla a las 10, recordame que..."
+            respuesta = (
+            "🤖 Comandos disponibles:\n"
+            "- Frases como: tomar pastilla a las 10, recordame que...\n"
             "- ver"
         )
+
 
     r = MessagingResponse()
     r.message(respuesta)
