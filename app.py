@@ -108,11 +108,9 @@ def whatsapp():
                 contexto["hora"] = hora
                 contexto["fase"] = "frecuencia"
                 guardar_temporal(temp)
-                else:
-        return responder(f"🔁 ¿Querés que te lo recuerde todos los días o solo una vez?")
+                return responder(f"🔁 ¿Querés que te lo recuerde todos los días o solo una vez?")
             else:
-                else:
-        return responder("❌ No entendí la hora. Probá algo como 'a las 9'.")
+                return responder("❌ No entendí la hora. Probá algo como 'a las 9'.")
 
         elif contexto.get("fase") == "frecuencia":
             msg = contexto["mensaje"]
@@ -131,43 +129,50 @@ def whatsapp():
             guardar_datos(data)
             temp.pop(numero)
             guardar_temporal(temp)
-            else:
-        return responder(respuesta)
+            return responder(respuesta)
 
     elif mensaje.lower() in comandos_ver:
         diarios = data[numero]["diarios"]
         puntuales = data[numero]["puntuales"]
-        respuesta = "🧠 Tus recordatorios:💊 Diarios:"
+        respuesta = "🧠 Tus recordatorios:
+
+💊 Diarios:
+"
         if diarios:
             for r in diarios:
-                respuesta += f"🕒 {r['hora']} - {r['mensaje']}"
+                respuesta += f"🕒 {r['hora']} - {r['mensaje']}
+"
         else:
-            respuesta += "Nada guardado."
-        respuesta += "📅 Puntuales:"
+            respuesta += "Nada guardado.
+"
+        respuesta += "
+📅 Puntuales:
+"
         if puntuales:
             for r in puntuales:
-                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}"
+                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}
+"
         else:
             respuesta += "Nada guardado."
-        else:
         return responder(respuesta)
 
     parsed = interpretar_con_gpt(mensaje)
-    if parsed and "mensaje" in parsed and any(p in mensaje.lower() for p in ["recordar", "recordame", "apuntame", "tomar", "pastilla", "medico", "medicación", "medicina", "tengo que"]):
+    if parsed and "mensaje" in parsed:
         temp[numero] = {
             "fase": "hora",
             "mensaje": parsed["mensaje"],
             "fecha": parsed.get("fecha")
         }
         guardar_temporal(temp)
-        else:
         return responder("⏰ ¿A qué hora querés que te lo recuerde?")
 
-    else:
-        return responder(
-        "🤖 Soy tu asistente de recordatorios de Cuidagram. Puedes decirme:"
-        "- 'Tomar pastilla a las 9'"
-        "- 'Apúntame el médico el 20 de abril'"
+    return responder(
+        "🤖 Soy tu asistente de recordatorios. Podés decirme:
+"
+        "- 'Tomar pastilla a las 9'
+"
+        "- 'Apúntame el médico el 20 de abril'
+"
         "- 'Ver recordatorios'"
     )
 
