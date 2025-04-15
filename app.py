@@ -120,24 +120,16 @@ def whatsapp():
     elif mensaje.lower() in comandos_ver:
         diarios = data[numero]["diarios"]
         puntuales = data[numero]["puntuales"]
-        respuesta = "🧠 Tus recordatorios:
-
-💊 Diarios:
-"
+        respuesta = "🧠 Tus recordatorios:💊 Diarios:"
         if diarios:
             for r in diarios:
-                respuesta += f"🕒 {r['hora']} - {r['mensaje']}
-"
+                respuesta += f"🕒 {r['hora']} - {r['mensaje']}"
         else:
-            respuesta += "Nada guardado.
-"
-        respuesta += "
-📅 Puntuales:
-"
+            respuesta += "Nada guardado."
+        respuesta += "📅 Puntuales:"
         if puntuales:
             for r in puntuales:
-                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}
-"
+                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}"
         else:
             respuesta += "Nada guardado."
 
@@ -164,14 +156,10 @@ def whatsapp():
                 respuesta = "⏰ ¿A qué hora querés que te lo recuerde?"
         else:
             respuesta = (
-                "🤖 Soy tu asistente de recordatorios.
-"
-                "Podés decirme:
-"
-                "- 'Tomar pastilla a las 9'
-"
-                "- 'Apúntame el médico el 20 de abril'
-"
+                "🤖 Soy tu asistente de recordatorios de Cuidagram."
+                "Puedes decirme:"
+                "- 'Tomar pastilla a las 9'"
+                "- 'Apúntame el médico el 20 de abril'"
                 "- 'Ver recordatorios'"
             )
 
