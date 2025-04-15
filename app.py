@@ -179,10 +179,7 @@ def whatsapp():
             guardar_temporal(temp)
             return responder("⏰ ¿A qué hora querés que te lo recuerde?")
     
-    return responder("🤖 No entendí el mensaje. Probá con algo como:
-- 'tomar pastilla a las 9'
-- 'recordame la cita el 20 de abril'
-- o decime 'ver' para mostrar tus recordatorios.")
+    return responder("🤖 No entendí el mensaje. Probá con algo como:- 'tomar pastilla a las 9'- 'recordame la cita el 20 de abril'- o decime 'ver' para mostrar tus recordatorios.")
 
 def responder(texto):
     r = MessagingResponse()
