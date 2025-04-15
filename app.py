@@ -55,25 +55,15 @@ def whatsapp():
     data = cargar_datos()
     if numero not in data:
         data[numero] = {"diarios": [], "puntuales": []}
-        bienvenida = ("👋 ¡Hola! Soy tu asistente personal de salud.
-"
-                      "💉 ¿Qué puedo hacer?
-"
-                      "- Recordarte tomar tu medicación diaria
-"
-                      "- Recordarte citas médicas en un día y hora puntual
-"
-                      "- Mostrar tus recordatorios con solo escribir `ver`
-
-"
-                      "📝 Escribime, por ejemplo:
-"
-                      "- 'Tomar la pastilla de la tensión todos los días a las 9'
-"
-                      "- 'Cita con el médico el 18 de abril a las 10:30'
-"
-                      "- o simplemente 'ver'
-"
+        bienvenida = ("👋 ¡Hola! Soy tu asistente personal de salud."
+                      "💉 ¿Qué puedo hacer?"
+                      "- Recordarte tomar tu medicación diaria"
+                      "- Recordarte citas médicas en un día y hora puntual"
+                      "- Mostrar tus recordatorios con solo escribir `ver`"
+                      "📝 Escribime, por ejemplo:"
+                      "- 'Tomar la pastilla de la tensión todos los días a las 9'"
+                      "- 'Cita con el médico el 18 de abril a las 10:30'"
+                      "- o simplemente 'ver'"
                       "Estoy listo para ayudarte 😊")
         r = MessagingResponse()
         r.message(bienvenida)
@@ -83,22 +73,16 @@ def whatsapp():
     if mensaje.lower() == "ver":
         diarios = data[numero]["diarios"]
         puntuales = data[numero]["puntuales"]
-        respuesta = "🧠 Tus recordatorios:
-💉 Diarios:
-"
+        respuesta = "🧠 Tus recordatorios:💉 Diarios:"
         if diarios:
             for r in diarios:
-                respuesta += f"🕒 {r['hora']} - {r['mensaje']}
-"
+                respuesta += f"🕒 {r['hora']} - {r['mensaje']}"
         else:
-            respuesta += "Nada guardado.
-"
-        respuesta += "📅 Puntuales:
-"
+            respuesta += "Nada guardado."
+        respuesta += "📅 Puntuales:"
         if puntuales:
             for r in puntuales:
-                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}
-"
+                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}"
         else:
             respuesta += "Nada guardado."
     elif any(k in mensaje.lower() for k in ["pastilla", "medicina", "tengo que", "me toca", "recordame", "cita"]):
@@ -116,7 +100,7 @@ def whatsapp():
                 respuesta = f"💉 Guardado diario a las {hora}: {texto}"
             guardar_datos(data)
         else:
-            respuesta = "⚠️ No entendí la hora. Probá algo como 'a las 9'."
+            respuesta = "⚠️ No entendí la hora. Prueba algo como 'a las 9'."
     else:
         respuesta = "🤖 Lo siento, solo puedo ayudarte con recordatorios de medicación diaria y citas médicas. Escribí 'ver' para ver los tuyos."
 
