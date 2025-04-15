@@ -140,25 +140,16 @@ def whatsapp():
         elif mensaje.lower() == "ver":
             diarios = data[numero]["diarios"]
             puntuales = data[numero]["puntuales"]
-            respuesta = "🧠 Tus recordatorios:
-
-💊 Diarios:
-"
+            respuesta = "🧠 Tus recordatorios:💊 Diarios:"
             for r in diarios:
-                respuesta += f"🕒 {r['hora']} - {r['mensaje']}
-"
-            respuesta += "
-📅 Puntuales:
-"
+                respuesta += f"🕒 {r['hora']} - {r['mensaje']}"
+            respuesta += "📅 Puntuales:"
             for r in puntuales:
-                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}
-"
+                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}"
         else:
             respuesta = (
-                "🤖 Comandos:
-"
-                "- tomar pastilla a las 10
-"
+                "🤖 Comandos:"
+                "- tomar pastilla a las 10"
                 "- ver"
             )
 
