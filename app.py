@@ -52,7 +52,7 @@ def revisar_recordatorios():
                 enviar_whatsapp(numero, f"📅 Recordatorio de cita: {r['mensaje']}")
 
 def interpretar_con_gpt(mensaje):
-    prompt = f"Extraé la hora y el mensaje de este texto para un recordatorio diario. Respondé solo en JSON (ejemplo: {{'hora': '09:00', 'mensaje': 'tomar pastilla'}}). Texto: {mensaje}"
+    prompt = f"Extraé la hora y el mensaje de este texto para un recordatorio diario. Respondé solo en JSON (ej: {{'hora': '09:00', 'mensaje': 'tomar pastilla'}}). Texto: {mensaje}"
     try:
         respuesta = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
@@ -62,11 +62,8 @@ def interpretar_con_gpt(mensaje):
         )
         contenido = respuesta.choices[0].message.content.strip()
         print("🧠 GPT respondió:", contenido)
-
-        # Limpieza básica si viene mal formado
-        contenido = re.sub(r"^[^\{]*", "", contenido)  # eliminar antes del primer {
-        contenido = re.sub(r"[^\}]*$", "", contenido)  # eliminar después del último }
-
+        contenido = re.sub(r"^[^\{]*", "", contenido)
+        contenido = re.sub(r"[^\}]*$", "", contenido)
         return json.loads(contenido)
     except Exception as e:
         print("❌ Error usando OpenAI:", e)
@@ -86,6 +83,8 @@ def whatsapp():
     if any(p in mensaje.lower() for p in intenciones):
         try:
             fechas = search_dates(mensaje, languages=["es"], settings={"PREFER_DATES_FROM": "future"})
+            print("🔍 Resultado de search_dates:", fechas)
+
             if fechas:
                 _, fecha_hora = fechas[0]
                 hora = fecha_hora.strftime("%H:%M")
@@ -94,7 +93,9 @@ def whatsapp():
                 guardar_datos(data)
                 respuesta = f"💊 Guardado para las {hora}: {texto}"
             else:
+                print("⚠️ No se detectó hora. Usando GPT...")
                 parsed = interpretar_con_gpt(mensaje)
+                print("🧪 Resultado de GPT:", parsed)
                 if parsed and "hora" in parsed and "mensaje" in parsed:
                     data[numero]["diarios"].append({
                         "hora": parsed["hora"],
@@ -123,8 +124,10 @@ def whatsapp():
             respuesta += "Nada guardado."
     else:
         respuesta = (
-            "🤖 Comandos:"
-            "- tomar pastilla a las 10"
+            "🤖 Comandos:
+"
+            "- tomar pastilla a las 10
+"
             "- ver"
         )
 
