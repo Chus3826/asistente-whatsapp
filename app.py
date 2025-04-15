@@ -115,24 +115,16 @@ def whatsapp():
     if mensaje.lower() in comandos_ver:
         diarios = data[numero]["diarios"]
         puntuales = data[numero]["puntuales"]
-        respuesta = "🧠 Tus recordatorios:
-
-💊 Diarios:
-"
+        respuesta = "🧠 Tus recordatorios:💊 Diarios:"
         if diarios:
             for r in diarios:
-                respuesta += f"🕒 {r['hora']} - {r['mensaje']}
-"
+                respuesta += f"🕒 {r['hora']} - {r['mensaje']}"
         else:
-            respuesta += "Nada guardado.
-"
-        respuesta += "
-📅 Puntuales:
-"
+            respuesta += "Nada guardado."
+        respuesta += "📅 Puntuales:"
         if puntuales:
             for r in puntuales:
-                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}
-"
+                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}"
         else:
             respuesta += "Nada guardado."
         return responder(respuesta)
