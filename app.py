@@ -12,7 +12,6 @@ import re
 
 app = Flask(__name__)
 DB_FILE = "recordatorios.json"
-TEMP_FILE = "esperando_contexto.json"
 
 openai.api_key = os.environ.get("OPENAI_API_KEY")
 TWILIO_PHONE = os.environ.get("TWILIO_PHONE")
@@ -45,13 +44,92 @@ def revisar_recordatorios():
     for numero, recordatorios in data.items():
         for r in recordatorios.get("diarios", []):
             if r["hora"] == ahora:
-                enviar_whatsapp(numero, f"⏰ Recordatorio diario: {r['mensaje']}")
+                enviar_whatsapp(numero, f"💊 Recordatorio diario: {r['mensaje']}")
         for r in recordatorios.get("puntuales", []):
             if r["fecha"] == hoy and r["hora"] == ahora:
-                enviar_whatsapp(numero, f"📅 Recordatorio de cita: {r['mensaje']}")
+                enviar_whatsapp(numero, f"📅 Recordatorio puntual: {r['mensaje']}")
 
-def interpretar_completo_gpt(mensaje):
-    prompt = f"""Extraé la hora (formato 24h HH:MM), el mensaje y la fecha (si se menciona) desde este texto para un recordatorio. Respondé solo en JSON con claves: 'hora', 'mensaje', 'fecha' (si hay).
+@app.route("/whatsapp", methods=["POST"])
+def whatsapp():
+    mensaje = request.form.get("Body").strip()
+    numero = request.form.get("From").strip().lower()
+    data = cargar_datos()
+    if numero not in data:
+        data[numero] = {"diarios": [], "puntuales": []}
+        guardar_datos(data)
+        return responder(
+            "👋 ¡Hola! Soy tu asistente personal de salud.
+
+"
+            "📌 ¿Qué puedo hacer?
+"
+            "- Recordarte tomar tu medicación diaria
+"
+            "- Recordarte citas médicas en un día y hora puntual
+"
+            "- Mostrar tus recordatorios con solo escribir 'ver'
+
+"
+            "📝 Escribime, por ejemplo:
+"
+            "- 'Tomar la pastilla de la tensión todos los días a las 9'
+"
+            "- 'Cita con el médico el 18 de abril a las 10:30'
+"
+            "- o simplemente 'ver'
+
+"
+            "Estoy listo para ayudarte 😊"
+        )
+
+    if mensaje.lower() in ["ver", "ver recordatorios"]:
+        diarios = data[numero]["diarios"]
+        puntuales = data[numero]["puntuales"]
+        respuesta = "🧠 Tus recordatorios:
+
+💊 Diarios:
+"
+        if diarios:
+            for r in diarios:
+                respuesta += f"🕒 {r['hora']} - {r['mensaje']}
+"
+        else:
+            respuesta += "Nada guardado.
+"
+        respuesta += "
+📅 Puntuales:
+"
+        if puntuales:
+            for r in puntuales:
+                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}
+"
+        else:
+            respuesta += "Nada guardado."
+        return responder(respuesta)
+
+    parsed = interpretar_gpt(mensaje)
+    if parsed and "hora" in parsed and "mensaje" in parsed:
+        hora = parsed["hora"]
+        msg = parsed["mensaje"]
+        fecha = parsed.get("fecha")
+        if not hora:
+            return responder("🕒 ¿A qué hora querés que te lo recuerde?")
+        if fecha:
+            data[numero]["puntuales"].append({"hora": hora, "fecha": fecha, "mensaje": msg})
+            respuesta = f"📅 Guardado puntual para el {fecha} a las {hora}: {msg}"
+        else:
+            data[numero]["diarios"].append({"hora": hora, "mensaje": msg})
+            respuesta = f"💊 Guardado diario a las {hora}: {msg}"
+        guardar_datos(data)
+        return responder(respuesta)
+
+    return responder("❌ No entendí el mensaje. Intentá algo como:
+- 'ver'
+- 'Tomar pastilla a las 8'
+- 'Médico el 20 a las 11'")
+
+def interpretar_gpt(mensaje):
+    prompt = f"""Extraé la hora (HH:MM), el mensaje y la fecha (si hay) desde este texto para un recordatorio. Respondé en JSON con claves 'hora', 'mensaje', 'fecha' (opcional).
 Texto: {mensaje}"""
     try:
         respuesta = openai.ChatCompletion.create(
@@ -68,61 +146,12 @@ Texto: {mensaje}"""
         print("❌ Error con OpenAI:", e)
         return None
 
-@app.route("/whatsapp", methods=["POST"])
-def whatsapp():
-    mensaje = request.form.get("Body").strip()
-    numero = request.form.get("From").strip().lower()
-    data = cargar_datos()
-    if numero not in data:
-        data[numero] = {"diarios": [], "puntuales": []}
-    respuesta = ""
-
-    comandos_ver = ["ver", "ver recordatorios", "qué tengo", "mostrar", "recordatorios"]
-    comandos_cancelar = ["cancelar", "salir", "olvidalo", "anular"]
-
-    if mensaje.lower() in comandos_cancelar:
-        return responder("🧼 Operación cancelada. Decime si querés guardar un nuevo recordatorio o ver los que ya tenés.")
-
-    if mensaje.lower() in comandos_ver:
-        diarios = data[numero]["diarios"]
-        puntuales = data[numero]["puntuales"]
-        respuesta = "🧠 Tus recordatorios:\n 💊 Diarios:\n "
-        if diarios:
-            for r in diarios:
-                respuesta += f"🕒 {r['hora']} - {r['mensaje']}"
-        else:
-            respuesta += "Nada guardado."
-        respuesta += "📅 Puntuales:"
-        if puntuales:
-            for r in puntuales:
-                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}"
-        else:
-            respuesta += "Nada guardado."
-        return responder(respuesta)
-
-    parsed = interpretar_completo_gpt(mensaje)
-    if parsed and "hora" in parsed and "mensaje" in parsed:
-        hora = parsed["hora"]
-        msg = parsed["mensaje"]
-        fecha = parsed.get("fecha")
-
-        if fecha:
-            data[numero]["puntuales"].append({"hora": hora, "fecha": fecha, "mensaje": msg})
-            respuesta = f"📅 Guardado puntual para el {fecha} a las {hora}: {msg}"
-        else:
-            data[numero]["diarios"].append({"hora": hora, "mensaje": msg})
-            respuesta = f"💊 Guardado diario a las {hora}: {msg}"
-        guardar_datos(data)
-        return responder(respuesta)
-
-    return responder("🤖 No entendí tu mensaje como un recordatorio. Puedes decir:\n - 'recordame el médico el 18 a las 9'\n - 'tomar pastilla a las 10'\n - o decime 'ver' para mostrar tus recordatorios.")
-
 def responder(texto):
     r = MessagingResponse()
     r.message(texto)
     return Response(str(r), mimetype="application/xml")
 
-print("✅ Asistente v5 iniciado (solo GPT para interpretar horas).")
+print("✅ Asistente con bienvenida iniciado.")
 scheduler = BackgroundScheduler()
 scheduler.add_job(revisar_recordatorios, "interval", minutes=1)
 scheduler.start()
