@@ -4,5 +4,4 @@ python-dotenv
 apscheduler
 pytz
 dateparser
-openai
 openai==0.28
