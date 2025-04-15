@@ -10,6 +10,10 @@ from pytz import timezone
 from dateparser.search import search_dates
 import openai
 import re
+import sys
+import logging
+logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
+
 
 app = Flask(__name__)
 DB_FILE = "recordatorios.json"
