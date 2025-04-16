@@ -5,13 +5,13 @@ from datetime import datetime
 from twilio.rest import Client
 from apscheduler.schedulers.background import BackgroundScheduler
 from pytz import timezone
+from dateparser.search import search_dates
 import openai
 
 app = Flask(__name__)
 DB_FILE = "recordatorios.json"
 
 openai.api_key = os.environ.get("OPENAI_API_KEY")
-
 TWILIO_PHONE = os.environ.get("TWILIO_PHONE")
 client = Client(os.environ.get("TWILIO_SID"), os.environ.get("TWILIO_AUTH_TOKEN"))
 
@@ -34,31 +34,32 @@ def enviar_whatsapp(to, body):
         print(f"❌ Error al enviar a {to}: {e}")
 
 # ------------------ Lógica GPT ------------------
-def interpretar_mensaje_con_gpt(texto):
-    prompt = f"""
-Actuá como un asistente que guarda recordatorios médicos. Analizá este mensaje y devolvé SOLO un JSON con los siguientes campos:
-- tipo: 'diario' o 'puntual'
-- hora: en formato HH:MM
-- fecha: solo si es puntual, en formato YYYY-MM-DD (o null)
-- mensaje: el contenido del recordatorio
+def interpretar_con_gpt(mensaje):
+    prompt = (
+        "Analizá este texto y extraé si se trata de una cita médica puntual o un recordatorio diario. "
+        "Devuelve un JSON con las claves: tipo ('puntual' o 'diario'), hora (formato HH:MM), "
+        "fecha (formato YYYY-MM-DD o null si no aplica), y mensaje (lo que hay que recordar).\n"
+        "Ejemplo de respuesta: {\"tipo\": \"diario\", \"hora\": \"09:00\", \"fecha\": null, \"mensaje\": \"tomar la pastilla\"}.\n"
+        f"Texto: {mensaje}"
+    )
 
-Mensaje: "{texto}"
-
-Ejemplo de respuesta:
-{{"tipo": "diario", "hora": "09:00", "fecha": null, "mensaje": "tomar pastilla de la tensión"}}
-"""
     try:
         respuesta = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}],
-            max_tokens=100,
-            temperature=0.3
+            temperature=0.3,
+            max_tokens=100
         )
-        texto_json = respuesta.choices[0].message.content.strip()
-        print("🧠 GPT:", texto_json)
-        return json.loads(re.sub(r".*?(\{.*\})", r"\1", texto_json, flags=re.DOTALL))
+        contenido = respuesta.choices[0].message.content.strip()
+        print("🧠 GPT respondió:", contenido)
+
+        # Limpiar si el modelo devuelve texto extra
+        contenido = re.sub(r"^[^{]*", "", contenido)
+        contenido = re.sub(r"[^}]*$", "", contenido)
+
+        return json.loads(contenido)
     except Exception as e:
-        print("❌ Error con GPT:", e)
+        print("❌ Error usando OpenAI:", e)
         return None
 
 # ------------------ Revisar recordatorios ------------------
@@ -118,17 +119,52 @@ def whatsapp():
         else:
             respuesta += "Nada guardado."
     else:
-        resultado = interpretar_mensaje_con_gpt(mensaje)
-        if resultado and "hora" in resultado and "mensaje" in resultado and resultado.get("tipo") in ["diario", "puntual"]:
-            if resultado["tipo"] == "diario":
-                data[numero]["diarios"].append({"hora": resultado["hora"], "mensaje": resultado["mensaje"]})
-                respuesta = f"💊 Guardado diario a las {resultado['hora']}: {resultado['mensaje']}"
+        fechas = search_dates(mensaje, languages=["es"], settings={"PREFER_DATES_FROM": "future"})
+        if fechas:
+            _, fh = fechas[0]
+            hora = fh.strftime("%H:%M")
+            texto = mensaje.replace(fechas[0][0], "").strip()
+
+            if re.search(r"\d{4}-\d{2}-\d{2}", fh.isoformat()):
+                fecha = fh.strftime("%Y-%m-%d")
+                data[numero]["puntuales"].append({
+                    "fecha": fecha,
+                    "hora": hora,
+                    "mensaje": texto
+                })
+                respuesta = f"📅 Guardado puntual para el {fecha} a las {hora}: {texto}"
             else:
-                data[numero]["puntuales"].append({"fecha": resultado["fecha"], "hora": resultado["hora"], "mensaje": resultado["mensaje"]})
-                respuesta = f"📅 Guardado puntual para el {resultado['fecha']} a las {resultado['hora']}: {resultado['mensaje']}"
+                data[numero]["diarios"].append({
+                    "hora": hora,
+                    "mensaje": texto
+                })
+                respuesta = f"💉 Guardado diario a las {hora}: {texto}"
             guardar_datos(data)
         else:
-            respuesta = "🤖 Solo puedo ayudarte con recordatorios de medicación diaria y citas médicas. Escribí 'ver' para ver los tuyos."
+            print("⚠️ No se detectó hora. Usando GPT...")
+            parsed = interpretar_con_gpt(mensaje)
+            if parsed and "hora" in parsed and "mensaje" in parsed:
+                if parsed["tipo"] == "puntual" and parsed.get("fecha"):
+                    data[numero]["puntuales"].append({
+                        "fecha": parsed["fecha"],
+                        "hora": parsed["hora"],
+                        "mensaje": parsed["mensaje"]
+                    })
+                    respuesta = f"📅 Guardado puntual para el {parsed['fecha']} a las {parsed['hora']}: {parsed['mensaje']}"
+                else:
+                    data[numero]["diarios"].append({
+                        "hora": parsed["hora"],
+                        "mensaje": parsed["mensaje"]
+                    })
+                    respuesta = f"💉 Guardado diario a las {parsed['hora']}: {parsed['mensaje']}"
+                guardar_datos(data)
+            else:
+                respuesta = (
+                    "❌ No pude entender el mensaje ni con ayuda. "
+                    "Probá con frases como:\n"
+                    "- Tomar la pastilla todos los días a las 9\n"
+                    "- Médico el 18 de abril a las 10"
+                )
 
     r = MessagingResponse()
     r.message(respuesta)
