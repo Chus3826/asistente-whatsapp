@@ -5,7 +5,6 @@ from datetime import datetime
 from twilio.rest import Client
 from apscheduler.schedulers.background import BackgroundScheduler
 from pytz import timezone
-from dateparser.search import search_dates
 import openai
 
 app = Flask(__name__)
@@ -15,7 +14,6 @@ openai.api_key = os.environ.get("OPENAI_API_KEY")
 TWILIO_PHONE = os.environ.get("TWILIO_PHONE")
 client = Client(os.environ.get("TWILIO_SID"), os.environ.get("TWILIO_AUTH_TOKEN"))
 
-# ------------------ Utilidades ------------------
 def cargar_datos():
     if os.path.exists(DB_FILE):
         with open(DB_FILE, "r") as f:
@@ -33,14 +31,21 @@ def enviar_whatsapp(to, body):
     except Exception as e:
         print(f"❌ Error al enviar a {to}: {e}")
 
-# ------------------ Lógica GPT ------------------
 def interpretar_con_gpt(mensaje):
     prompt = (
-        "Analizá este texto y extraé si se trata de una cita médica puntual o un recordatorio diario. "
-        "Devuelve un JSON con las claves: tipo ('puntual' o 'diario'), hora (formato HH:MM), "
-        "fecha (formato YYYY-MM-DD o null si no aplica), y mensaje (lo que hay que recordar).\n"
-        "Ejemplo de respuesta: {\"tipo\": \"diario\", \"hora\": \"09:00\", \"fecha\": null, \"mensaje\": \"tomar la pastilla\"}.\n"
-        f"Texto: {mensaje}"
+        "Actuá como un asistente de salud para personas mayores. Interpretá el mensaje, detectá si se trata de una cita médica o una medicación diaria y devolvé SOLO un JSON con:
+"
+        "- tipo: 'diario' o 'puntual'
+"
+        "- hora: en formato HH:MM (24 horas)
+"
+        "- fecha: formato YYYY-MM-DD o null si no aplica
+"
+        "- mensaje: el texto a recordar
+"
+        "Ejemplo: {"tipo": "diario", "hora": "08:30", "fecha": null, "mensaje": "tomar pastilla de la tensión"}
+"
+        f"Mensaje: {mensaje}"
     )
 
     try:
@@ -48,20 +53,17 @@ def interpretar_con_gpt(mensaje):
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.3,
-            max_tokens=100
+            max_tokens=150
         )
         contenido = respuesta.choices[0].message.content.strip()
         print("🧠 GPT respondió:", contenido)
-
         contenido = re.sub(r"^[^{]*", "", contenido)
         contenido = re.sub(r"[^}]*$", "", contenido)
-
         return json.loads(contenido)
     except Exception as e:
         print("❌ Error usando OpenAI:", e)
         return None
 
-# ------------------ Revisar recordatorios ------------------
 def revisar_recordatorios():
     print("⏰ [Scheduler activo] Revisando recordatorios...")
     data = cargar_datos()
@@ -77,7 +79,6 @@ def revisar_recordatorios():
             if r["fecha"] == hoy and r["hora"] == ahora:
                 enviar_whatsapp(numero, f"📅 Cita médica: {r['mensaje']}")
 
-# ------------------ Ruta principal ------------------
 @app.route("/whatsapp", methods=["POST"])
 def whatsapp():
     mensaje = request.form.get("Body").strip()
@@ -87,20 +88,27 @@ def whatsapp():
     if numero not in data:
         data[numero] = {"diarios": [], "puntuales": []}
         guardar_datos(data)
-    
-    bienvenida = (
-        "👋 ¡Hola! Soy tu asistente personal de salud.\n"
-        "🎉 ¿Qué puedo hacer?\n"
-        "- Recordarte tomar tu medicación diaria\n"
-        "- Recordarte citas médicas en un día y hora puntual\n"
-        "- Mostrar tus recordatorios escribiendo 'ver'\n"
-        "📌 Escribí por ejemplo:\n"
-        "- pastilla tensión a las 9\n"
-        "- médico 17 abril a las 10\n"
-        "- ver"
-    )
 
     if mensaje.lower() in ["hola", "hi"]:
+        bienvenida = (
+            "👋 ¡Hola! Soy tu asistente personal de salud.
+"
+            "🎉 ¿Qué puedo hacer?
+"
+            "- Recordarte tomar tu medicación diaria
+"
+            "- Recordarte citas médicas en un día y hora puntual
+"
+            "- Mostrar tus recordatorios escribiendo 'ver'
+"
+            "📝 Escribí por ejemplo:
+"
+            "- pastilla tensión a las 9
+"
+            "- médico 17 abril a las 10
+"
+            "- ver"
+        )
         r = MessagingResponse()
         r.message(bienvenida)
         return Response(str(r), mimetype="application/xml")
@@ -108,16 +116,24 @@ def whatsapp():
     if mensaje.lower() == "ver":
         diarios = data[numero]["diarios"]
         puntuales = data[numero]["puntuales"]
-        respuesta = "🧠 Tus recordatorios:\n\n💊 Diarios:\n"
+        respuesta = "🧠 Tus recordatorios:
+
+💊 Diarios:
+"
         if diarios:
             for r in diarios:
-                respuesta += f"🕒 {r['hora']} - {r['mensaje']}\n"
+                respuesta += f"🕒 {r['hora']} - {r['mensaje']}
+"
         else:
-            respuesta += "Nada guardado.\n"
-        respuesta += "\n📅 Puntuales:\n"
+            respuesta += "Nada guardado.
+"
+        respuesta += "
+📅 Puntuales:
+"
         if puntuales:
             for r in puntuales:
-                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}\n"
+                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}
+"
         else:
             respuesta += "Nada guardado."
     else:
@@ -139,9 +155,11 @@ def whatsapp():
             guardar_datos(data)
         else:
             respuesta = (
-                "❌ No entendí el mensaje. Intentá escribir algo como:\n"
-                "- pastilla tensión a las 9\n"
-                "- médico 17 abril a las 10"
+                "❌ No entendí el mensaje. Probá con frases como:
+"
+                "- pastilla tensión a las 9
+"
+                "- médico el 18 de abril a las 10"
             )
 
     r = MessagingResponse()
