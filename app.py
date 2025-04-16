@@ -32,15 +32,15 @@ def enviar_whatsapp(to, body):
     except Exception as e:
         print(f"❌ Error al enviar a {to}: {e}")
 
-# ------------------ Lógica GPT completa ------------------
+# ------------------ Interpretación con GPT ------------------
 def interpretar_con_gpt(mensaje):
     prompt = (
-        "Actuá como un asistente de salud para personas mayores. Interpretá el mensaje, detectá si se trata de una cita médica o una medicación diaria y devolvé SOLO un JSON con:"
-        "- tipo: 'diario' o 'puntual'"
-        "- hora: en formato HH:MM (24 horas)"
-        "- fecha: formato YYYY-MM-DD o null si no aplica"
-        "- mensaje: el texto a recordar"
-        "Ejemplo: {\"tipo\": \"diario\", \"hora\": \"08:30\", \"fecha\": null, \"mensaje\": \"tomar pastilla de la tensión\"}\n"
+        "Actuá como un asistente de salud para personas mayores. Interpretá el mensaje, detectá si se trata de una cita médica o una medicación diaria y devolvé SOLO un JSON con:\n"
+        "- tipo: 'diario' o 'puntual'\n"
+        "- hora: en formato HH:MM (24 horas)\n"
+        "- fecha: formato YYYY-MM-DD o null si no aplica\n"
+        "- mensaje: el texto a recordar\n"
+        "Ejemplo: {'tipo': 'diario', 'hora': '08:30', 'fecha': null, 'mensaje': 'tomar pastilla de la tensión'}\n"
         f"Mensaje: {mensaje}"
     )
 
@@ -74,7 +74,7 @@ def revisar_recordatorios():
                 enviar_whatsapp(numero, f"💊 Recordatorio diario: {r['mensaje']}")
         for r in recordatorios.get("puntuales", []):
             if r["fecha"] == hoy and r["hora"] == ahora:
-                enviar_whatsapp(numero, f"📅 Cita médica: {r['mensaje']}")
+                enviar_whatsapp(numero, f"🗕️ Cita médica: {r['mensaje']}")
 
 # ------------------ Ruta principal ------------------
 @app.route("/whatsapp", methods=["POST"])
@@ -97,7 +97,8 @@ def whatsapp():
             "📝 Escribí por ejemplo:\n"
             "- pastilla tensión a las 9\n"
             "- médico 17 abril a las 10\n"
-            "- ver"
+            "- ver\n"
+            "- eliminar todos\n"
         )
         r = MessagingResponse()
         r.message(bienvenida)
@@ -112,12 +113,18 @@ def whatsapp():
                 respuesta += f"🕒 {r['hora']} - {r['mensaje']}\n"
         else:
             respuesta += "Nada guardado.\n"
-        respuesta += "\n📅 Puntuales:\n"
+        respuesta += "\n🗌 Puntuales:\n"
         if puntuales:
             for r in puntuales:
-                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}\n"
+                respuesta += f"🗓️ {r['fecha']} {r['hora']} - {r['mensaje']}\n"
         else:
             respuesta += "Nada guardado."
+
+    elif mensaje.lower() == "eliminar todos":
+        data[numero] = {"diarios": [], "puntuales": []}
+        guardar_datos(data)
+        respuesta = "❌ Todos tus recordatorios fueron eliminados."
+
     else:
         parsed = interpretar_con_gpt(mensaje)
         if parsed and "hora" in parsed and "mensaje" in parsed and parsed.get("tipo"):
@@ -127,13 +134,13 @@ def whatsapp():
                     "hora": parsed["hora"],
                     "mensaje": parsed["mensaje"]
                 })
-                respuesta = f"📅 Guardado puntual para el {parsed['fecha']} a las {parsed['hora']}: {parsed['mensaje']}"
+                respuesta = f"🗌 Guardado puntual para el {parsed['fecha']} a las {parsed['hora']}: {parsed['mensaje']}"
             else:
                 data[numero]["diarios"].append({
                     "hora": parsed["hora"],
                     "mensaje": parsed["mensaje"]
                 })
-                respuesta = f"💉 Guardado diario a las {parsed['hora']}: {parsed['mensaje']}"
+                respuesta = f"💊 Guardado diario a las {parsed['hora']}: {parsed['mensaje']}"
             guardar_datos(data)
         else:
             respuesta = (
