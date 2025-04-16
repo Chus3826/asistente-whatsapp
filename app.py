@@ -53,7 +53,6 @@ def interpretar_con_gpt(mensaje):
         contenido = respuesta.choices[0].message.content.strip()
         print("🧠 GPT respondió:", contenido)
 
-        # Limpiar si el modelo devuelve texto extra
         contenido = re.sub(r"^[^{]*", "", contenido)
         contenido = re.sub(r"[^}]*$", "", contenido)
 
@@ -88,17 +87,20 @@ def whatsapp():
     if numero not in data:
         data[numero] = {"diarios": [], "puntuales": []}
         guardar_datos(data)
-        bienvenida = (
-            "👋 ¡Hola! Soy tu asistente personal de salud.\n"
-            "🎉 ¿Qué puedo hacer?\n"
-            "- Recordarte tomar tu medicación diaria\n"
-            "- Recordarte citas médicas en un día y hora puntual\n"
-            "- Mostrar tus recordatorios escribiendo 'ver'\n"
-            "🔷 Por ejemplo:\n"
-            "- Tomar la pastilla de la tensión todos los días a las 9\n"
-            "- Cita con el médico el 18 de abril a las 10:30\n"
-            "- ver para tus recordatorios"
-        )
+    
+    bienvenida = (
+        "👋 ¡Hola! Soy tu asistente personal de salud.\n"
+        "🎉 ¿Qué puedo hacer?\n"
+        "- Recordarte tomar tu medicación diaria\n"
+        "- Recordarte citas médicas en un día y hora puntual\n"
+        "- Mostrar tus recordatorios escribiendo 'ver'\n"
+        "📌 Escribí por ejemplo:\n"
+        "- pastilla tensión a las 9\n"
+        "- médico 17 abril a las 10\n"
+        "- ver"
+    )
+
+    if mensaje.lower() in ["hola", "hi"]:
         r = MessagingResponse()
         r.message(bienvenida)
         return Response(str(r), mimetype="application/xml")
@@ -119,52 +121,28 @@ def whatsapp():
         else:
             respuesta += "Nada guardado."
     else:
-        fechas = search_dates(mensaje, languages=["es"], settings={"PREFER_DATES_FROM": "future"})
-        if fechas:
-            _, fh = fechas[0]
-            hora = fh.strftime("%H:%M")
-            texto = mensaje.replace(fechas[0][0], "").strip()
-
-            if re.search(r"\d{4}-\d{2}-\d{2}", fh.isoformat()):
-                fecha = fh.strftime("%Y-%m-%d")
+        parsed = interpretar_con_gpt(mensaje)
+        if parsed and "hora" in parsed and "mensaje" in parsed and parsed.get("tipo"):
+            if parsed["tipo"] == "puntual" and parsed.get("fecha"):
                 data[numero]["puntuales"].append({
-                    "fecha": fecha,
-                    "hora": hora,
-                    "mensaje": texto
+                    "fecha": parsed["fecha"],
+                    "hora": parsed["hora"],
+                    "mensaje": parsed["mensaje"]
                 })
-                respuesta = f"📅 Guardado puntual para el {fecha} a las {hora}: {texto}"
+                respuesta = f"📅 Guardado puntual para el {parsed['fecha']} a las {parsed['hora']}: {parsed['mensaje']}"
             else:
                 data[numero]["diarios"].append({
-                    "hora": hora,
-                    "mensaje": texto
+                    "hora": parsed["hora"],
+                    "mensaje": parsed["mensaje"]
                 })
-                respuesta = f"💉 Guardado diario a las {hora}: {texto}"
+                respuesta = f"💉 Guardado diario a las {parsed['hora']}: {parsed['mensaje']}"
             guardar_datos(data)
         else:
-            print("⚠️ No se detectó hora. Usando GPT...")
-            parsed = interpretar_con_gpt(mensaje)
-            if parsed and "hora" in parsed and "mensaje" in parsed:
-                if parsed["tipo"] == "puntual" and parsed.get("fecha"):
-                    data[numero]["puntuales"].append({
-                        "fecha": parsed["fecha"],
-                        "hora": parsed["hora"],
-                        "mensaje": parsed["mensaje"]
-                    })
-                    respuesta = f"📅 Guardado puntual para el {parsed['fecha']} a las {parsed['hora']}: {parsed['mensaje']}"
-                else:
-                    data[numero]["diarios"].append({
-                        "hora": parsed["hora"],
-                        "mensaje": parsed["mensaje"]
-                    })
-                    respuesta = f"💉 Guardado diario a las {parsed['hora']}: {parsed['mensaje']}"
-                guardar_datos(data)
-            else:
-                respuesta = (
-                    "❌ No pude entender el mensaje ni con ayuda. "
-                    "Probá con frases como:\n"
-                    "- Tomar la pastilla todos los días a las 9\n"
-                    "- Médico el 18 de abril a las 10"
-                )
+            respuesta = (
+                "❌ No entendí el mensaje. Intentá escribir algo como:\n"
+                "- pastilla tensión a las 9\n"
+                "- médico 17 abril a las 10"
+            )
 
     r = MessagingResponse()
     r.message(respuesta)
