@@ -14,6 +14,7 @@ openai.api_key = os.environ.get("OPENAI_API_KEY")
 TWILIO_PHONE = os.environ.get("TWILIO_PHONE")
 client = Client(os.environ.get("TWILIO_SID"), os.environ.get("TWILIO_AUTH_TOKEN"))
 
+# ------------------ Utilidades ------------------
 def cargar_datos():
     if os.path.exists(DB_FILE):
         with open(DB_FILE, "r") as f:
@@ -31,6 +32,7 @@ def enviar_whatsapp(to, body):
     except Exception as e:
         print(f"❌ Error al enviar a {to}: {e}")
 
+# ------------------ Lógica GPT completa ------------------
 def interpretar_con_gpt(mensaje):
     prompt = (
         "Actuá como un asistente de salud para personas mayores. Interpretá el mensaje, detectá si se trata de una cita médica o una medicación diaria y devolvé SOLO un JSON con:"
@@ -38,7 +40,7 @@ def interpretar_con_gpt(mensaje):
         "- hora: en formato HH:MM (24 horas)"
         "- fecha: formato YYYY-MM-DD o null si no aplica"
         "- mensaje: el texto a recordar"
-        "Ejemplo: {"tipo": "diario", "hora": "08:30", "fecha": null, "mensaje": "tomar pastilla de la tensión"}"
+        "Ejemplo: {\"tipo\": \"diario\", \"hora\": \"08:30\", \"fecha\": null, \"mensaje\": \"tomar pastilla de la tensión\"}\n"
         f"Mensaje: {mensaje}"
     )
 
@@ -58,6 +60,7 @@ def interpretar_con_gpt(mensaje):
         print("❌ Error usando OpenAI:", e)
         return None
 
+# ------------------ Revisar recordatorios ------------------
 def revisar_recordatorios():
     print("⏰ [Scheduler activo] Revisando recordatorios...")
     data = cargar_datos()
@@ -73,6 +76,7 @@ def revisar_recordatorios():
             if r["fecha"] == hoy and r["hora"] == ahora:
                 enviar_whatsapp(numero, f"📅 Cita médica: {r['mensaje']}")
 
+# ------------------ Ruta principal ------------------
 @app.route("/whatsapp", methods=["POST"])
 def whatsapp():
     mensaje = request.form.get("Body").strip()
@@ -85,14 +89,14 @@ def whatsapp():
 
     if mensaje.lower() in ["hola", "hi"]:
         bienvenida = (
-            "👋 ¡Hola! Soy tu asistente personal de salud."
-            "🎉 ¿Qué puedo hacer?"
-            "- Recordarte tomar tu medicación diaria"
-            "- Recordarte citas médicas en un día y hora puntual"
-            "- Mostrar tus recordatorios escribiendo 'ver'"
-            "📝 Escribí por ejemplo:"
-            "- pastilla tensión a las 9"
-            "- médico 17 abril a las 10"
+            "👋 ¡Hola! Soy tu asistente personal de salud.\n"
+            "🎉 ¿Qué puedo hacer?\n"
+            "- Recordarte tomar tu medicación diaria\n"
+            "- Recordarte citas médicas en un día y hora puntual\n"
+            "- Mostrar tus recordatorios escribiendo 'ver'\n"
+            "📝 Escribí por ejemplo:\n"
+            "- pastilla tensión a las 9\n"
+            "- médico 17 abril a las 10\n"
             "- ver"
         )
         r = MessagingResponse()
@@ -102,16 +106,16 @@ def whatsapp():
     if mensaje.lower() == "ver":
         diarios = data[numero]["diarios"]
         puntuales = data[numero]["puntuales"]
-        respuesta = "🧠 Tus recordatorios:💊 Diarios:"
+        respuesta = "🧠 Tus recordatorios:\n\n💊 Diarios:\n"
         if diarios:
             for r in diarios:
-                respuesta += f"🕒 {r['hora']} - {r['mensaje']}"
+                respuesta += f"🕒 {r['hora']} - {r['mensaje']}\n"
         else:
-            respuesta += "Nada guardado."
-        respuesta += "📅 Puntuales:"
+            respuesta += "Nada guardado.\n"
+        respuesta += "\n📅 Puntuales:\n"
         if puntuales:
             for r in puntuales:
-                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}"
+                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}\n"
         else:
             respuesta += "Nada guardado."
     else:
@@ -133,8 +137,8 @@ def whatsapp():
             guardar_datos(data)
         else:
             respuesta = (
-                "❌ No entendí el mensaje. Probá con frases como:"
-                "- pastilla tensión a las 9"
+                "❌ No entendí el mensaje. Probá con frases como:\n"
+                "- pastilla tensión a las 9\n"
                 "- médico el 18 de abril a las 10"
             )
 
