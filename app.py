@@ -33,18 +33,12 @@ def enviar_whatsapp(to, body):
 
 def interpretar_con_gpt(mensaje):
     prompt = (
-        "Actuá como un asistente de salud para personas mayores. Interpretá el mensaje, detectá si se trata de una cita médica o una medicación diaria y devolvé SOLO un JSON con:
-"
-        "- tipo: 'diario' o 'puntual'
-"
-        "- hora: en formato HH:MM (24 horas)
-"
-        "- fecha: formato YYYY-MM-DD o null si no aplica
-"
-        "- mensaje: el texto a recordar
-"
-        "Ejemplo: {"tipo": "diario", "hora": "08:30", "fecha": null, "mensaje": "tomar pastilla de la tensión"}
-"
+        "Actuá como un asistente de salud para personas mayores. Interpretá el mensaje, detectá si se trata de una cita médica o una medicación diaria y devolvé SOLO un JSON con:"
+        "- tipo: 'diario' o 'puntual'"
+        "- hora: en formato HH:MM (24 horas)"
+        "- fecha: formato YYYY-MM-DD o null si no aplica"
+        "- mensaje: el texto a recordar"
+        "Ejemplo: {"tipo": "diario", "hora": "08:30", "fecha": null, "mensaje": "tomar pastilla de la tensión"}"
         f"Mensaje: {mensaje}"
     )
 
@@ -91,22 +85,14 @@ def whatsapp():
 
     if mensaje.lower() in ["hola", "hi"]:
         bienvenida = (
-            "👋 ¡Hola! Soy tu asistente personal de salud.
-"
-            "🎉 ¿Qué puedo hacer?
-"
-            "- Recordarte tomar tu medicación diaria
-"
-            "- Recordarte citas médicas en un día y hora puntual
-"
-            "- Mostrar tus recordatorios escribiendo 'ver'
-"
-            "📝 Escribí por ejemplo:
-"
-            "- pastilla tensión a las 9
-"
-            "- médico 17 abril a las 10
-"
+            "👋 ¡Hola! Soy tu asistente personal de salud."
+            "🎉 ¿Qué puedo hacer?"
+            "- Recordarte tomar tu medicación diaria"
+            "- Recordarte citas médicas en un día y hora puntual"
+            "- Mostrar tus recordatorios escribiendo 'ver'"
+            "📝 Escribí por ejemplo:"
+            "- pastilla tensión a las 9"
+            "- médico 17 abril a las 10"
             "- ver"
         )
         r = MessagingResponse()
@@ -116,24 +102,16 @@ def whatsapp():
     if mensaje.lower() == "ver":
         diarios = data[numero]["diarios"]
         puntuales = data[numero]["puntuales"]
-        respuesta = "🧠 Tus recordatorios:
-
-💊 Diarios:
-"
+        respuesta = "🧠 Tus recordatorios:💊 Diarios:"
         if diarios:
             for r in diarios:
-                respuesta += f"🕒 {r['hora']} - {r['mensaje']}
-"
+                respuesta += f"🕒 {r['hora']} - {r['mensaje']}"
         else:
-            respuesta += "Nada guardado.
-"
-        respuesta += "
-📅 Puntuales:
-"
+            respuesta += "Nada guardado."
+        respuesta += "📅 Puntuales:"
         if puntuales:
             for r in puntuales:
-                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}
-"
+                respuesta += f"📆 {r['fecha']} {r['hora']} - {r['mensaje']}"
         else:
             respuesta += "Nada guardado."
     else:
@@ -155,10 +133,8 @@ def whatsapp():
             guardar_datos(data)
         else:
             respuesta = (
-                "❌ No entendí el mensaje. Probá con frases como:
-"
-                "- pastilla tensión a las 9
-"
+                "❌ No entendí el mensaje. Probá con frases como:"
+                "- pastilla tensión a las 9"
                 "- médico el 18 de abril a las 10"
             )
 
