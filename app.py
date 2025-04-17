@@ -40,8 +40,10 @@ def whatsapp():
         f"Mensaje: {mensaje}\n"
     )
 
+    print("📡 Enviando mensaje a GPT...")
+    print("🧾 Prompt enviado a GPT:\n", prompt)
+
     try:
-        print("📡 Enviando a GPT...")
         respuesta = openai.ChatCompletion.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}],
@@ -70,3 +72,4 @@ print("✅ Mini asistente de prueba activo")
 if __name__ == "__main__":
     print("🚀 Ejecutando archivo:", __name__)
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
