@@ -18,8 +18,7 @@ def whatsapp():
     prompt = (
         "Sos un asistente para personas mayores que guarda recordatorios médicos. "
         "Extraé tipo ('diario' o 'puntual'), hora (HH:MM), fecha (YYYY-MM-DD o null), mensaje. "
-        "Devolvé solo un JSON.
-"
+        "Devolvé solo un JSON."
         f"Mensaje: {mensaje}\n"
     )
 
