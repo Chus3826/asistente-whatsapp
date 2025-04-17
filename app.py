@@ -34,15 +34,19 @@ def enviar_whatsapp(to, body):
 
 # ------------------ Interpretación con GPT ------------------
 def interpretar_con_gpt(mensaje):
+    print(f"📤 Enviando a GPT: {mensaje}")
+
     prompt = (
-        "Actuá como un asistente de salud para personas mayores. Interpretá el mensaje aunque sea informal. Detectá si se trata de una cita médica o una medicación diaria. Devolvé SOLO un JSON con:\n"
+        "Actuá como un asistente para personas mayores que necesita guardar recordatorios médicos. "
+        "Tu tarea es analizar el siguiente mensaje y devolver SOLO un JSON con:\n\n"
         "- tipo: 'diario' o 'puntual'\n"
-        "- hora: formato HH:MM (24 horas)\n"
-        "- fecha: YYYY-MM-DD si es puntual, null si no aplica\n"
-        "- mensaje: lo que hay que recordar\n"
-        "Si falta la hora o la fecha, devolvé los campos como null.\n"
-        "Ejemplo: {\"tipo\": \"diario\", \"hora\": \"08:30\", \"fecha\": null, \"mensaje\": \"tomar pastilla de la tensión\"}\n"
-        f"Mensaje: {mensaje}"
+        "- hora: formato HH:MM en 24h (incluso si dicen 'y media', 'y cuarto', 'por la mañana', etc.)\n"
+        "- fecha: YYYY-MM-DD si es puntual, null si no aplica (usa la fecha si se menciona, o si dicen 'mañana', etc.)\n"
+        "- mensaje: lo que hay que recordar\n\n"
+        "⚠️ Si el mensaje no tiene suficiente información como la hora o la fecha, devolvé ese campo como null.\n\n"
+        f"Mensaje: {mensaje}\n\n"
+        "Ejemplo de respuesta:\n"
+        "{\"tipo\": \"puntual\", \"hora\": \"15:30\", \"fecha\": \"2025-04-20\", \"mensaje\": \"cita con el cardiólogo\"}"
     )
 
     try:
@@ -50,7 +54,7 @@ def interpretar_con_gpt(mensaje):
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}],
             temperature=0.2,
-            max_tokens=200
+            max_tokens=250
         )
         contenido = respuesta.choices[0].message.content.strip()
         print("🧠 GPT respondió:", contenido)
@@ -138,21 +142,26 @@ def whatsapp():
 
     else:
         parsed = interpretar_con_gpt(mensaje)
-        if parsed and parsed.get("hora") and parsed.get("mensaje"):
-            if parsed["tipo"] == "puntual" and parsed.get("fecha"):
+        if parsed:
+            if not parsed.get("hora"):
+                respuesta = "🕐 ¿A qué hora querés que te lo recuerde?"
+            elif parsed["tipo"] == "puntual" and not parsed.get("fecha"):
+                respuesta = "📅 ¿Para qué día es esta cita médica?"
+            elif parsed["tipo"] == "puntual":
                 data[numero]["puntuales"].append({
                     "fecha": parsed["fecha"],
                     "hora": parsed["hora"],
                     "mensaje": parsed["mensaje"]
                 })
+                guardar_datos(data)
                 respuesta = f"🗓️ Guardado puntual para el {parsed['fecha']} a las {parsed['hora']}: {parsed['mensaje']}"
             else:
                 data[numero]["diarios"].append({
                     "hora": parsed["hora"],
                     "mensaje": parsed["mensaje"]
                 })
+                guardar_datos(data)
                 respuesta = f"💊 Guardado diario a las {parsed['hora']}: {parsed['mensaje']}"
-            guardar_datos(data)
         else:
             respuesta = (
                 "❓ Disculpá, no entendí bien el mensaje. ¿Podrías decirlo con algo como:\n"
