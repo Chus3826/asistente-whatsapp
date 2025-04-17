@@ -73,3 +73,4 @@ print("✅ Mini asistente de prueba activo")
 if __name__ == "__main__":
     print("🚀 Ejecutando archivo:", __name__)
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
+
