@@ -15,10 +15,23 @@ openai.api_key = oai_key
 @app.route("/whatsapp", methods=["POST"])
 def whatsapp():
     print("📬 request.form completo:", dict(request.form))
-    mensaje = request.form.get("Body", "").strip()
-    numero = request.form.get("From", "").strip().lower()
 
-    print(f"📥 Mensaje recibido: {mensaje} de {numero}")
+    mensaje = request.form.get("Body")
+    numero = request.form.get("From")
+
+    if not mensaje:
+        print("⚠️ Body no encontrado en request.form")
+        mensaje = ""
+    else:
+        mensaje = mensaje.strip()
+
+    if not numero:
+        print("⚠️ From no encontrado en request.form")
+        numero = ""
+    else:
+        numero = numero.strip().lower()
+
+    print(f"📥 Mensaje recibido: '{mensaje}' de '{numero}'")
 
     prompt = (
         "Sos un asistente para personas mayores que guarda recordatorios médicos. "
@@ -57,4 +70,3 @@ print("✅ Mini asistente de prueba activo")
 if __name__ == "__main__":
     print("🚀 Ejecutando archivo:", __name__)
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
-
