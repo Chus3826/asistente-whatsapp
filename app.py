@@ -34,7 +34,7 @@ def whatsapp():
     print(f"📥 Mensaje recibido: '{mensaje}' de '{numero}'")
 
     prompt = (
-        "Sos un asistente para personas mayores que guarda recordatorios médicos. "
+        "Eres un asistente para personas mayores que guarda recordatorios médicos. "
         "Extraé tipo ('diario' o 'puntual'), hora (HH:MM), fecha (YYYY-MM-DD o null), mensaje. "
         "Devolvé solo un JSON.\n"
         f"Mensaje: {mensaje}\n"
