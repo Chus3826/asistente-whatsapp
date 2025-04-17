@@ -33,8 +33,9 @@ def whatsapp():
 
     print(f"📥 Mensaje recibido: '{mensaje}' de '{numero}'")
 
+    print("🧪 Lógica de GPT activada")
     prompt = (
-        "Eres un asistente para personas mayores que guarda recordatorios médicos. "
+        "Sos un asistente para personas mayores que guarda recordatorios médicos. "
         "Extraé tipo ('diario' o 'puntual'), hora (HH:MM), fecha (YYYY-MM-DD o null), mensaje. "
         "Devolvé solo un JSON.\n"
         f"Mensaje: {mensaje}\n"
@@ -72,4 +73,3 @@ print("✅ Mini asistente de prueba activo")
 if __name__ == "__main__":
     print("🚀 Ejecutando archivo:", __name__)
     app.run(host="0.0.0.0", port=int(os.environ.get("PORT", 5000)))
-
